@@ -30,7 +30,6 @@ const int highValueHysteresis=70;
 
 int lastPowerNumber = -1;
 long previousMillis = 0;        // will store last time was updated
-long previousMillisSerial = 0;
 long interval = 1000;
 long upIfLastDownIsGreaterMsThan = 10000;
 
@@ -84,15 +83,15 @@ void loop()
     if(v==HIGH)
       sumValuesTrue[i]++;
     bool l=lastValues[i];
+    if(lastDown[i]>currentMillis && i<powercount) //in the future, then time drift, fix by 0 because no action before 10s (see upIfLastDownIsGreaterMsThan)
+        lastDown[i]=0;
     if(l==false && sumValuesTrue[i]*100/valueCount>highValueHysteresis)
       lastValues[i]=true;
     else if(l==true && sumValuesTrue[i]*100/valueCount<lowValueHysteresis)
     {
       lastValues[i]=false;
-      if(i<3)
+      if(i<powercount)
         lastDown[i]=currentMillis;
-      else if(lastDown[i]>currentMillis) //in the future, then time drift, fix by 0 because no action before 10s (see upIfLastDownIsGreaterMsThan)
-        lastDown[i]=0;
     }
     inputValues[i][indexLastValues]=v;
   }
@@ -118,6 +117,8 @@ void loop()
         lastDown[i]=currentMillis;
     }
     
+    if(previousMillis>currentMillis)
+      previousMillis = currentMillis;
     if(currentMillis>upIfLastDownIsGreaterMsThan && currentMillis - previousMillis > interval)
     {
       int bestPowerNumber=-1;
